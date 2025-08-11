@@ -1,10 +1,12 @@
 use std::fmt::Display;
 
+/// Represents a path to a remote file or directory.
 pub struct RemotePath(String);
 
 impl RemotePath {
     pub fn new(path: &str) -> Self {
         RemotePath(String::from("/") + path.trim_start_matches("/"))
+        //TODO check for correct syntax?
     }
 
     /// Navigate to a new path.

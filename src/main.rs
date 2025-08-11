@@ -10,11 +10,11 @@ mod commands;
 
 #[derive(Debug, Parser)]
 pub struct Cli {
-    /// Filen account email
+    /// Filen account email (requires --password)
     #[arg(short, long)]
     email: Option<String>,
 
-    /// Filen account password
+    /// Filen account password (requires --email)
     #[arg(short, long)]
     password: Option<String>,
 
@@ -24,12 +24,16 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
+    /// Change the working directory (in REPL)
     Cd {
         directory: String,
     },
+    /// List files in a directory
     Ls {
+        /// Directory to list files in, defaults to the current working directory.
         directory: Option<String>,
     },
+    /// Exit the REPL
     Exit,
 }
 
@@ -51,7 +55,6 @@ async fn main() -> Result<()> {
             if line.is_empty() {
                 continue;
             }
-
             let mut args = shlex::split(line).with_context(|| "error: Invalid quoting")?;
             args.insert(0, String::from("filen"));
             let cli = match Cli::try_parse_from(args).map_err(|e| e.to_string()) {
@@ -81,8 +84,11 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
+/// Information returned by a command execution.
 pub struct CommandResult {
+    /// Change the REPL's working path.
     working_path: Option<RemotePath>,
+    /// Exit the REPL.
     exit: bool,
 }
 impl Default for CommandResult {
