@@ -1,12 +1,12 @@
-use std::io::Write;
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
+use std::io::Write;
 
 use crate::{auth::authenticate, commands::execute_command, util::RemotePath};
 
-mod util;
 mod auth;
 mod commands;
+mod util;
 
 #[derive(Debug, Parser)]
 pub struct Cli {
@@ -25,9 +25,7 @@ pub struct Cli {
 #[derive(Debug, Subcommand)]
 pub enum Commands {
     /// Change the working directory (in REPL)
-    Cd {
-        directory: String,
-    },
+    Cd { directory: String },
     /// List files in a directory
     Ls {
         /// Directory to list files in, defaults to the current working directory.
