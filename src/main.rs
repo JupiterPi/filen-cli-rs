@@ -1,8 +1,12 @@
 use anyhow::{Context, Result};
-use clap::{Parser, Subcommand};
+use clap::Parser;
 use std::io::Write;
 
-use crate::{auth::authenticate, commands::execute_command, util::RemotePath};
+use crate::{
+    auth::authenticate,
+    commands::{Commands, execute_command},
+    util::RemotePath,
+};
 
 mod auth;
 mod commands;
@@ -20,19 +24,6 @@ pub struct Cli {
 
     #[command(subcommand)]
     command: Option<Commands>,
-}
-
-#[derive(Debug, Subcommand)]
-pub enum Commands {
-    /// Change the working directory (in REPL)
-    Cd { directory: String },
-    /// List files in a directory
-    Ls {
-        /// Directory to list files in, defaults to the current working directory.
-        directory: Option<String>,
-    },
-    /// Exit the REPL
-    Exit,
 }
 
 #[tokio::main]
@@ -100,10 +91,24 @@ impl Default for CommandResult {
 
 // util
 
-fn prompt(prompt: &str) -> Result<String> {
-    write!(std::io::stdout(), "{} ", prompt.trim())?;
-    std::io::stdout().flush()?;
+fn prompt(msg: &str) -> Result<String> {
+    write!(std::io::stdout(), "{} ", msg.trim())
+        .with_context(|| "Failed to write message for prompt")?;
+    std::io::stdout()
+        .flush()
+        .with_context(|| "Failed to write message for prompt")?;
     let mut buffer = String::new();
-    std::io::stdin().read_line(&mut buffer)?;
+    std::io::stdin()
+        .read_line(&mut buffer)
+        .with_context(|| "Failed to read line for prompt")?;
     Ok(buffer)
+}
+
+fn prompt_confirm(msg: &str, default: bool) -> Result<bool> {
+    let y_n_str = if default { "Y/n" } else { "y/N" };
+    let response = prompt(&format!("{} [{}]: ", msg, y_n_str))?;
+    if response.trim().is_empty() {
+        return Ok(default);
+    }
+    Ok(response.trim().eq_ignore_ascii_case("y"))
 }

@@ -1,7 +1,23 @@
 use anyhow::Result;
+use clap::Subcommand;
 use filen_sdk_rs::{auth::Client, fs::HasName};
 
-use crate::{CommandResult, Commands, util::RemotePath};
+use crate::{CommandResult, util::RemotePath};
+
+#[derive(Debug, Subcommand)]
+pub enum Commands {
+    /// Delete saved credentials
+    Logout,
+    /// Change the working directory (in REPL)
+    Cd { directory: String },
+    /// List files in a directory
+    Ls {
+        /// Directory to list files in, defaults to the current working directory.
+        directory: Option<String>,
+    },
+    /// Exit the REPL
+    Exit,
+}
 
 pub async fn execute_command(
     client: &Client,
@@ -9,6 +25,11 @@ pub async fn execute_command(
     command: &Commands,
 ) -> Result<CommandResult> {
     let result: Option<CommandResult> = match command {
+        Commands::Logout => {
+            crate::auth::delete_credentials()?;
+            println!("Credentials deleted.");
+            None
+        }
         Commands::Cd { directory } => {
             let working_path = working_path.navigate(directory);
             Some(CommandResult {
